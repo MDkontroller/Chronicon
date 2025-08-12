@@ -7,8 +7,18 @@ __pycache__/
 .venv/
 venv/
 
+# external documentation
+docs/
+
 # Inference results
 inference_results_*.json
+Inference/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Test files
+dummy_test_video.*
 
 # IDE
 .vscode/
