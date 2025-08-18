@@ -17,6 +17,9 @@ Inference/
 # Jupyter notebooks
 .ipynb_checkpoints/
 
+# video files
+*.mp4
+
 # Test files
 dummy_test_video.*
 
