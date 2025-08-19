@@ -9,6 +9,11 @@ venv/
 
 # external documentation
 docs/
+videos/
+
+
+# tests
+test.py
 
 # Inference results
 inference_results_*.json

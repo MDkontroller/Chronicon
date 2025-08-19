@@ -6,6 +6,9 @@ Chronicon – SmolVLM Standalone GPU Inference (CUDA-safe)
 - Audits and fixes CPU-straggler params/buffers to prevent device mismatch
 - Bucketize shim to stop cuda/cpu boundary mismatches in SmolVLM vision
 - Clean CPU fallback path
+
+
+python inference_script_gpu_fixed.py test_video.mp4 --frames 8 -v
 """
 
 import argparse
@@ -71,7 +74,7 @@ class ChroniconVLM:
 
     def load(self):
         if self.verbose:
-            print(f"📦 Loading model {self.model_id}")
+            print(f"    Loading model {self.model_id}")
             print(f"   - Torch: {torch.__version__} | CUDA: {torch.version.cuda}")
             print(f"   - GPU[{self.cuda_device_index}]: {torch.cuda.get_device_name(self.cuda_device_index)}")
             print(f"   - 4-bit quantization: {self.quant_4bit}")
@@ -86,7 +89,7 @@ class ChroniconVLM:
             tried.append("GPU")
         except Exception as e:
             if self.verbose:
-                print(f"❌ GPU load failed ({'4-bit' if self.quant_4bit else 'fp16'}): {e}")
+                print(f" GPU load failed ({'4-bit' if self.quant_4bit else 'fp16'}): {e}")
             # try non-quantized if quantized failed
             if self.quant_4bit:
                 try:
@@ -94,12 +97,12 @@ class ChroniconVLM:
                     tried.append("GPU-fp16")
                 except Exception as e2:
                     if self.verbose:
-                        print(f"❌ GPU fp16 load failed: {e2}")
+                        print(f" GPU fp16 load failed: {e2}")
 
         if self.model is None:
             # CPU fallback
             if self.verbose:
-                print("⚠️ Falling back to CPU...")
+                print(" Falling back to CPU...")
             self._load_cpu()
             tried.append("CPU")
 
@@ -113,7 +116,7 @@ class ChroniconVLM:
                 tok.pad_token_id = tok.eos_token_id if tok.eos_token_id is not None else 0
 
         if self.verbose:
-            print(f"✅ Load complete on: {self._model_primary_device()} (tried: {', '.join(tried)})")
+            print(f"Load complete on: {self._model_primary_device()} (tried: {', '.join(tried)})")
 
         # Final audit (only meaningful if on CUDA)
         if self._is_cuda():
@@ -181,7 +184,7 @@ class ChroniconVLM:
                 cpu_items.append(("buffer", n, b.device))
 
         if cpu_items and self.verbose:
-            print("⚠️ Found items on CPU, moving parents to CUDA (best effort):")
+            print("Found items on CPU, moving parents to CUDA (best effort):")
             for kind, n, dev in cpu_items[:12]:
                 print(f"   - {kind}: {n} on {dev}")
 
@@ -255,7 +258,9 @@ class ChroniconVLM:
         prompt: str,
         num_frames: int = 4,
         resize: int = 336,
-        max_tokens: int = 100,
+        max_tokens: int = 200,
+        min_tokens: int = 50,	
+
     ) -> Dict[str, Any]:
 
         # 1) Sample frames
@@ -280,17 +285,18 @@ class ChroniconVLM:
         # 5) Optional: last sanity check
         if self.verbose:
             devs = {k: str(v.device) for k, v in inputs.items() if hasattr(v, "device")}
-            print("🧭 input devices:", devs)
-            print("🧭 model device:", self._model_primary_device())
+            print(" input devices:", devs)
+            print(" model device:", self._model_primary_device())
 
         # 6) Generate
         with torch.no_grad():
             out = self.model.generate(
                 **inputs,
                 max_new_tokens=max_tokens,
+                min_new_tokens=min_tokens,
                 do_sample=False,
                 num_beams=1,
-                repetition_penalty=1.05,
+                repetition_penalty=1.13,
                 use_cache=True,
                 pad_token_id=self.processor.tokenizer.pad_token_id,
             )
@@ -306,6 +312,7 @@ class ChroniconVLM:
             "num_frames": len(frames),
             "resize": resize,
             "max_tokens": max_tokens,
+            "min_tokens": min_tokens,
             "analysis": text,
             "timestamp": datetime.now().isoformat(),
             "model": self.model_id,
@@ -342,6 +349,7 @@ def parse_args():
     ap.add_argument("video_path", help="Path to the input video")
     ap.add_argument("--frames", "-f", type=int, default=8, help="Frames to sample")
     ap.add_argument("--resize", "-r", type=int, default=336, help="Resize long side")
+    ap.add_argument("--min-tokens", type=int, default=50, help="Min new tokens to generate") 
     ap.add_argument("--max-tokens", "-t", type=int, default=100, help="Max new tokens to generate")
     ap.add_argument("--prompt", "-p", type=str, default="Describe the main events, actions, and content in this video.")
     ap.add_argument("--model", "-m", type=str, default="HuggingFaceTB/SmolVLM2-256M-Video-Instruct")
@@ -356,15 +364,15 @@ def main():
     args = parse_args()
 
     if not os.path.exists(args.video_path):
-        print(f"❌ Video not found: {args.video_path}")
+        print(f" Video not found: {args.video_path}")
         sys.exit(1)
 
-    print("🎥 Chronicon – SmolVLM GPU Inference")
+    print("Chronicon – SmolVLM GPU Inference")
     print("=" * 60)
-    print(f"📹 Video: {args.video_path}")
-    print(f"🎬 Frames: {args.frames} | 📝 Max tokens: {args.max_tokens}")
-    print(f"🤖 Model: {args.model} | 4-bit: {not args.no_quant}")
-    print(f"🖥️ CUDA device: {args.cuda_device} | 💾 Save: {not args.no_save}")
+    print(f"Video: {args.video_path}")
+    print(f"Frames: {args.frames} |  Max tokens: {args.max_tokens}")
+    print(f"Model: {args.model} | 4-bit: {not args.no_quant}")
+    print(f"CUDA device: {args.cuda_device} | Save: {not args.no_save}")
 
     t0 = time.time()
     try:
@@ -384,6 +392,7 @@ def main():
             num_frames=args.frames,
             resize=args.resize,
             max_tokens=args.max_tokens,
+            min_tokens=args.min_tokens, 
         )
         infer_s = time.time() - t1
         total_s = time.time() - t0
@@ -394,20 +403,21 @@ def main():
             "total_time": round(total_s, 2),
         }
 
-        print("\n✅ Done.")
-        print(f"⏱️ Load: {load_s:.2f}s | Inference: {infer_s:.2f}s | Total: {total_s:.2f}s")
-        print(f"🖥️ Device: {result['device']} | Quantized: {result['quantized']}")
-        print(f"📝 Preview: {result['analysis'][:200]}{'...' if len(result['analysis']) > 200 else ''}")
+        print("\n Done.")
+        print(f" Load: {load_s:.2f}s | Inference: {infer_s:.2f}s | Total: {total_s:.2f}s")
+        print(f" Device: {result['device']} | Quantized: {result['quantized']}")
+        print(f" Preview: {result['analysis'][:200]}{'...' if len(result['analysis']) > 200 else ''}")
 
         if not args.no_save:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            out = f"inference_results_{ts}.json"
+            out = f"inference/inference_results_{ts}.json"
+
             with open(out, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
-            print(f"💾 Saved: {out}")
+            print(f"Saved: {out}")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         if args.verbose:
             import traceback
             traceback.print_exc()
