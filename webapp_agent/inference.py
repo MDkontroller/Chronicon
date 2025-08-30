@@ -143,7 +143,7 @@ class ChroniconVLM:
         try:
             self.model = torch.compile(self.model, mode="max-autotune")
             if self.verbose:
-                print("⚡ torch.compile enabled (max-autotune) fp16")
+                print("⚡ torch.compile enabled (max-autotune) nf4")
         except Exception as e:
             if self.verbose:
                 print(f"⚠️ torch.compile unavailable: {e}")
@@ -156,7 +156,7 @@ class ChroniconVLM:
             device_map={"": self.cuda_device_index},  # single device, no sharding
             low_cpu_mem_usage=True,
         ).eval()
-                   # Try to JIT compile with PyTorch 2.x
+           # Try to JIT compile with PyTorch 2.x
         try:
             self.model = torch.compile(self.model, mode="max-autotune")
             if self.verbose:

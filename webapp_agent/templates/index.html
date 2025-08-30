@@ -1,0 +1,860 @@
+
+<!--
+    Chronicon Web Application - Index File
+
+    Runs with video height set to 500px.
+    for the video player.
+
+-->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronicon - Video Event Detection</title>
+    <style>
+        :root {
+            --video-max-height: 500px; /* TO RESIZE VIDEO */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: #eef2ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .video-player {
+            width: 100%;
+            max-width: 100%;
+            max-height: var(--video-max-height);
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            object-fit: cover;
+        }
+
+        .video-controls {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .video-controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .video-controls button:hover {
+            background: #764ba2;
+        }
+
+        .frame-indicator {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            font-size: 0.9rem;
+            color: #1976d2;
+        }
+
+        .video-info {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .video-info h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-area {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-area h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .analysis-text {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .advanced-options {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .advanced-options h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .video-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .video-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .analysis-progress {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 Chronicon</h1>
+            <p>AI-Powered Video Event Detection & Analysis</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="card">
+                <h2>📤 Upload Video</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🎬</div>
+                    <p><strong>Drop your video here</strong></p>
+                    <p>or click to browse</p>
+                    <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
+                        Supports MP4, AVI, MOV (max 50MB)
+                    </p>
+                </div>
+                <input type="file" id="videoFile" accept="video/*" style="display: none;">
+                
+                <!-- Video Player -->
+                <video id="videoPlayer" class="video-player" controls>
+                    <p>Your browser doesn't support video playback.</p>
+                </video>
+
+                <!-- Video Controls -->
+                <div class="video-controls" id="videoControls">
+                    <button onclick="seekToFrame(0)">⏮ Start</button>
+                    <button onclick="seekToFrame(0.25)">25%</button>
+                    <button onclick="seekToFrame(0.5)">50%</button>
+                    <button onclick="seekToFrame(0.75)">75%</button>
+                    <button onclick="seekToFrame(1)">⏭ End</button>
+                </div>
+
+                <!-- Frame Analysis Indicator -->
+                <div class="frame-indicator" id="frameIndicator">
+                    <strong>📊 Analysis Progress:</strong> <span id="frameProgress">Preparing...</span>
+                </div>
+                
+                <div class="video-info" id="videoInfo">
+                    <h3>📋 Video Information</h3>
+                    <div class="info-grid" id="infoGrid">
+                        <!-- Video info will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="card">
+                <h2>🤖 Analysis Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="prompt">Analysis Prompt:</label>
+                    <textarea 
+                        id="prompt" 
+                        class="form-control" 
+                        rows="3" 
+                        placeholder="Describe what you want to detect or analyze in the video..."
+                    >Detect notable events and summarize what happens in this video. Focus on key actions, objects, and any significant moments.</textarea>
+                </div>
+
+                <div class="advanced-options">
+                    <h3>⚙️ Advanced Options</h3>
+                    <div class="options-grid">
+                        <div class="form-group">
+                            <label for="frames">Frames to Analyze:</label>
+                            <select id="frames" class="form-control">
+                                <option value="4">4 frames (fastest)</option>
+                                <option value="8" selected>8 frames (balanced)</option>
+                                <option value="12">12 frames (detailed)</option>
+                                <option value="16">16 frames (most detailed)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="maxTokens">Max Response Length:</label>
+                            <select id="maxTokens" class="form-control">
+                                <option value="60">Short (60 tokens)</option>
+                                <option value="120" selected>Medium (120 tokens)</option>
+                                <option value="200">Long (200 tokens)</option>
+                                <option value="300">Very Long (300 tokens)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="analyzeBtn" class="btn" disabled>
+                    🔍 Analyze Video
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-area" id="resultsArea">
+            <h2>📊 Analysis Results</h2>
+            
+            <div class="status" id="statusArea">
+                <span id="statusText">Ready to analyze...</span>
+            </div>
+            
+            <div class="analysis-progress" id="analysisProgress">
+                <div>🎬 <strong>Analyzing frames...</strong> <span id="progressText">Starting analysis...</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="analysis-text" id="analysisText" style="display: none;">
+                <!-- Analysis results will appear here -->
+            </div>
+            
+            <div class="stats" id="statsArea" style="display: none;">
+                <!-- Statistics will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Actions -->
+    <div class="results-area" id="agentArea" style="display: none;">
+        <h2>🧠 Agent Actions</h2>
+        <div class="status" id="agentStatus">Waiting for decision...</div>
+        <div class="analysis-text" id="agentLog" style="display:none;"></div>
+        <div style="margin-top:12px;">
+        <button class="btn" id="btnRunDecision" disabled>Run Decision Now</button>
+        </div>
+    </div>
+
+    <script>
+        let currentVideo = null;
+        let videoFile = null;
+        let analysisInProgress = false;
+        let videoInfo = null;
+
+        // DOM elements
+        const uploadArea = document.getElementById('uploadArea');
+        const videoFileInput = document.getElementById('videoFile');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoControls = document.getElementById('videoControls');
+        const frameIndicator = document.getElementById('frameIndicator');
+        const frameProgress = document.getElementById('frameProgress');
+        const videoInfoDiv = document.getElementById('videoInfo');
+        const infoGrid = document.getElementById('infoGrid');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultsArea = document.getElementById('resultsArea');
+        const statusArea = document.getElementById('statusArea');
+        const statusText = document.getElementById('statusText');
+        const analysisText = document.getElementById('analysisText');
+        const statsArea = document.getElementById('statsArea');
+        const analysisProgress = document.getElementById('analysisProgress');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+
+        // Upload handling
+        uploadArea.addEventListener('click', () => videoFileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        videoFileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        }
+
+        async function handleFile(file) {
+            if (!file.type.startsWith('video/')) {
+                alert('Please select a video file');
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                alert('File size must be less than 50MB');
+                return;
+            }
+
+            statusText.textContent = 'Uploading video...';
+            videoFile = file;
+            
+            // Create video URL for player
+            const videoURL = URL.createObjectURL(file);
+            videoPlayer.src = videoURL;
+            videoPlayer.style.display = 'block';
+            videoControls.style.display = 'block';
+            
+            const formData = new FormData();
+            formData.append('video', file);
+
+            try {
+                const response = await fetch('/upload_video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentVideo = file;
+                    videoInfo = result;
+                    displayVideoInfo(result);
+                    analyzeBtn.disabled = false;
+                    statusText.textContent = 'Video uploaded successfully. Ready to analyze!';
+                } else {
+                    alert('Error uploading video: ' + result.error);
+                    statusText.textContent = 'Upload failed';
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Error uploading video');
+                statusText.textContent = 'Upload failed';
+            }
+        }
+
+        function displayVideoInfo(info) {
+            infoGrid.innerHTML = `
+                <div><strong>Filename:</strong> ${info.filename}</div>
+                <div><strong>Size:</strong> ${info.size_mb} MB</div>
+                <div><strong>Duration:</strong> ${info.duration}s</div>
+                <div><strong>Resolution:</strong> ${info.resolution}</div>
+                <div><strong>FPS:</strong> ${info.fps}</div>
+                <div><strong>Frames:</strong> ${info.frame_count}</div>
+            `;
+            
+            videoInfoDiv.style.display = 'block';
+        }
+
+        // Video control functions
+        function seekToFrame(percentage) {
+            if (videoPlayer.duration) {
+                videoPlayer.currentTime = videoPlayer.duration * percentage;
+            }
+        }
+
+        function highlightAnalysisFrames(totalFrames, currentFrame) {
+            if (!videoInfo) return;
+            
+            const percentage = (currentFrame / totalFrames) * 100;
+            progressFill.style.width = `${percentage}%`;
+            progressText.textContent = `Frame ${currentFrame} of ${totalFrames}`;
+            
+            // Seek to the approximate frame being analyzed
+            if (videoPlayer.duration) {
+                const timePosition = (currentFrame / totalFrames) * videoPlayer.duration;
+                // Only seek if not currently playing to avoid interruption
+                if (videoPlayer.paused) {
+                    videoPlayer.currentTime = timePosition;
+                }
+            }
+        }
+
+        // Analysis handling
+        analyzeBtn.addEventListener('click', startAnalysis);
+
+        async function startAnalysis() {
+            if (analysisInProgress || !currentVideo) return;
+
+            analysisInProgress = true;
+            analyzeBtn.disabled = true;
+            resultsArea.style.display = 'block';
+            analysisText.style.display = 'none';
+            statsArea.style.display = 'none';
+            analysisProgress.style.display = 'block';
+            frameIndicator.style.display = 'block';
+
+            const prompt = document.getElementById('prompt').value;
+            const frames = document.getElementById('frames').value;
+            const maxTokens = document.getElementById('maxTokens').value;
+            const runId = `web_${Date.now()}`;
+
+            statusText.innerHTML = '<span class="loading"></span>Starting analysis...';
+            frameProgress.textContent = `Preparing to analyze ${frames} frames...`;
+
+            try {
+                const url = `/analyze?prompt=${encodeURIComponent(prompt)}&frames=${frames}&max_tokens=${maxTokens}&run_id=${runId}`;
+                const eventSource = new EventSource(url);
+
+                let analysisResult = '';
+                let fullResult = null;
+                let currentFrameCount = 0;
+
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+
+                    if (data.status) {
+                        statusText.innerHTML = `<span class="loading"></span>${data.status}`;
+                        
+                        // Update frame progress based on status
+                        if (data.status.includes('Processing')) {
+                            currentFrameCount = Math.min(currentFrameCount + 1, frames);
+                            highlightAnalysisFrames(frames, currentFrameCount);
+                            frameProgress.textContent = `Processing frame analysis...`;
+                        } else if (data.status.includes('Analyzing')) {
+                            progressText.textContent = `Analyzing ${frames} frames...`;
+                            progressFill.style.width = '20%';
+                        } else if (data.status.includes('Streaming')) {
+                            progressText.textContent = 'Generating response...';
+                            progressFill.style.width = '80%';
+                        }
+                    } else if (data.text) {
+                        analysisResult += data.text;
+                        analysisText.textContent = analysisResult;
+                        analysisText.style.display = 'block';
+                        progressFill.style.width = '90%';
+                    } else if (data.complete) {
+                        fullResult = data.result;
+                        statusText.textContent = 'Analysis completed!';
+                        frameProgress.textContent = `Analysis complete! Processed ${frames} frames.`;
+                        progressFill.style.width = '100%';
+                        displayStats(data.stats, fullResult);
+                        eventSource.close();
+                        analysisInProgress = false;
+                        analyzeBtn.disabled = false;
+
+                        // ▼▼ Enable + run the agent
+                        window._lastFullResult = fullResult;
+                        document.getElementById('btnRunDecision').disabled = false;
+                        runDecision(fullResult);
+
+                        // Hide progress after a delay
+                        setTimeout(() => {
+                            analysisProgress.style.display = 'none';
+                        }, 3000);
+                    } else if (data.error) {
+                        statusText.textContent = 'Error: ' + data.error;
+                        frameProgress.textContent = 'Analysis failed';
+                        progressFill.style.width = '0%';
+                        eventSource.close();
+                        analysisInProgress = false;
+                        analyzeBtn.disabled = false;
+                        analysisProgress.style.display = 'none';
+                    }
+                };
+
+                eventSource.onerror = function(event) {
+                    console.error('EventSource error:', event);
+                    statusText.textContent = 'Connection error';
+                    frameProgress.textContent = 'Connection lost';
+                    eventSource.close();
+                    analysisInProgress = false;
+                    analyzeBtn.disabled = false;
+                    analysisProgress.style.display = 'none';
+                };
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                statusText.textContent = 'Analysis failed';
+                frameProgress.textContent = 'Analysis failed';
+                analysisInProgress = false;
+                analyzeBtn.disabled = false;
+                analysisProgress.style.display = 'none';
+            }
+        }
+
+        function displayStats(stats, result) {
+            if (!stats && !result) return;
+
+            const timing = result?.timing || {};
+            
+            statsArea.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${result?.num_frames || 'N/A'}</div>
+                    <div class="stat-label">Frames Analyzed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${timing.total_time || 'N/A'}s</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${timing.tokens_generated || 'N/A'}</div>
+                    <div class="stat-label">Tokens Generated</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${timing.tokens_per_second || 'N/A'}</div>
+                    <div class="stat-label">Tokens/Second</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats?.gpu_memory || 'N/A'}</div>
+                    <div class="stat-label">GPU Memory</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats?.memory_usage || 'N/A'}</div>
+                    <div class="stat-label">System Memory</div>
+                </div>
+            `;
+            
+            statsArea.style.display = 'grid';
+        }
+
+        const agentArea = document.getElementById('agentArea');
+        const agentStatus = document.getElementById('agentStatus');
+        const agentLog = document.getElementById('agentLog');
+        const btnRunDecision = document.getElementById('btnRunDecision');
+
+        async function runDecision(fullResult) {
+            try {
+            agentArea.style.display = 'block';
+            agentStatus.innerHTML = '<span class="loading"></span>Making decision...';
+            agentLog.style.display = 'none';
+
+            const payload = {
+                analysis: fullResult?.analysis || '',
+                run_id: fullResult?.run_id || `web_${Date.now()}`,
+                video_filename: fullResult?.video_filename || 'video'
+            };
+
+            const res = await fetch('/decide_and_act', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (!data.ok) {
+                agentStatus.textContent = 'Agent error.';
+                return;
+            }
+
+            const { decision, action, email_status } = data;
+            const lines = [];
+            lines.push(`<b>Decision:</b> ${decision.label} (score ${decision.score})`);
+            lines.push(`<b>Reason:</b> ${decision.reason}`);
+            lines.push(`<b>Chosen action:</b> ${action}`);
+            if (email_status) lines.push(`<b>Email:</b> ${email_status}`);
+
+            agentLog.innerHTML = lines.join('<br/>');
+            agentLog.style.display = 'block';
+            agentStatus.textContent = 'Agent completed.';
+            } catch (e) {
+            agentStatus.textContent = 'Agent error: ' + e;
+            }
+        }
+
+        btnRunDecision.addEventListener('click', () => {
+            // uses last fullResult captured below
+            if (window._lastFullResult) runDecision(window._lastFullResult);
+        });
+
+
+
+
+
+
+
+
+
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            statusText.textContent = 'Upload a video to get started';
+        });
+
+        // Clean up video URL when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (videoPlayer.src && videoPlayer.src.startsWith('blob:')) {
+                URL.revokeObjectURL(videoPlayer.src);
+            }
+        });
+    </script>
+</body>
+</html>
